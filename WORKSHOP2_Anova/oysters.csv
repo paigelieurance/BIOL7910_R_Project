@@ -1,0 +1,17 @@
+treatment,height,replicate,nlive,av.size
+Native,High,1,5,40.8
+Native,High,2,4,40.5
+Native,High,3,5,40.4
+Native,High,4,6,40.8
+Native,Low,1,10,45.8
+Native,Low,2,12,45
+Native,Low,3,15,45.1
+Native,Low,4,11,45.6
+Invasive,High,1,1,40
+Invasive,High,2,2,42.5
+Invasive,High,3,1,43.3
+Invasive,High,4,1,44
+Invasive,Low,1,15,70.9
+Invasive,Low,2,14,69.7
+Invasive,Low,3,10,68.7
+Invasive,Low,4,14,68.6

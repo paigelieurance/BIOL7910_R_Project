@@ -1,0 +1,81 @@
+---
+title: "Workshop 3 - Linear regression and correlation"
+author: "Paige Lieurance"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Simple linear regression
+
+``` {r}
+
+#data set has to be in R directory to be read with script
+gala <- read.table('gala.txt',header=TRUE,row.names=1)
+head(gala)
+
+plot(gala) #all variables on one plot, names refer to axes on each individual plot
+pdf('gala.pdf',width=6,height=6) #create PDF of plot in directory
+dev.off() #turns off the PDF device (so PDFs aren't saved every time)
+
+#fit a linear regression model (both variables are numerical)
+gala.model<-lm(Species~Area,data=gala) #species = response variable, area = predictor variable
+
+plot(Species~Area,data=gala) # creates scatter plot
+abline(gala.model) # adds regression line
+
+str(gala.model) #attributes of object gala.model (structure)
+
+#extractor functions to simplify dataset and pull out info
+coef(gala.model)
+residuals(gala.model)
+fitted.values(gala.model)
+cooks.distance(gala.model)
+summary(gala.model)
+anova(gala.model)
+
+# LOG TRANSFORMING DATA AND RUNNING SAME ANALYSIS
+#adding columns to dataset that are log-transformed values of area and species
+gala$ln.area <- log(gala$Area)
+gala$ln.species <- log(gala$Species)
+
+plot(gala$ln.area,gala$ln.species) # plots linear regression in log
+gala.model2<-lm(ln.species~ln.area,data=gala) # fits logged model
+abline(gala.model2) # adds regression line
+summary(gala.model2)
+
+plot(gala.model) #assumption plots of untransformed data
+
+plot(gala.model2) #assumption plots of log transformed data
+#residuals are normally distributed 
+
+confint(gala.model2)
+#confidence intervals of slope of gala.model2 = 95% chance that data set includes the true mean
+```
+
+# Multiple linear regression 
+
+``` {r}
+# using same gala data set 
+gala$ln.elev <- log(gala$Elevation)
+m1 <- lm(gala$ln.sp~ln.area,data=gala)
+m2 <- lm(gala$ln.sp~ln.area+ln.elev,data=gala)
+anova(m1,m2) #no significant effect of elevation
+
+#stepwise selection to evaluate whether there are other significant predictors
+#creating new log transformed columns
+gala$ln.nearest <- log(gala$Nearest)
+gala$ln.scruz <- log(gala$Scruz+1)
+gala$ln.adjacent <- log(gala$Adjacent)
+
+gala.full <- lm(ln.species~ln.area+ln.elev+ln.nearest+ln.scruz+ln.adjacent,data=gala)
+gala.step <- step(gala.full,direction='backward')
+
+#AIC = measures the quality of the model and the goodness of fit
+#the lower the AIC the better the fit with the pruning of each variable at each step
+#final model = ln.species~ln.area+ln.scruz (lowest AIC) 
+
+```
+

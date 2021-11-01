@@ -1,0 +1,174 @@
+---
+title: "Workshop 2 - ANOVA"
+author: "Paige Lieurance"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# GENERATING SIMULATED DATASETS AND PARTITIONING VARIANCE
+
+KEY R FUNCTIONS/OPERATIONS:
+* `lm()`: fits a linear model
+* `anova()`: partitions variance in linear model
+* `df()`: probability density of f distribution
+* `pf()`: critical values of f distribution
+* `qf()`: quantiles of f distribution
+* `rnorm()`: random draws from a normal distribution
+
+``` {r simulation, include = FALSE}
+
+# creating a simulated dataset called my.table
+
+my.table <- data.frame(group=c(rep('group_1',3),
+                               rep('group_2',3)),
+                       response=c(c(4,5,6),
+                                  c(3,2,4)))
+
+# fitting model to dataset
+my.model <- lm(response~group,data=my.table)
+
+# partitions variance, runs ANOVA 
+anova(my.model)
+
+# F distribution
+plot(seq(0,8,0.1),df(seq(0,8,0.1),1,4),type='l',xlab='F',ylab='Density')
+qf(0.95,1,4) #critical F value
+pf(6,1,4,lower.tail=FALSE) #p value
+
+# constructing data with NO DIFFERENCE
+
+no.diff.data <- data.frame(group=c(rep('diet_a',8),
+                                   rep('diet_b',8),
+                                   rep('diet_c',8)),
+                           growth=c(rnorm(n=8,mean=100,sd=20),
+                                    rnorm(n=8,mean=100,sd=20),
+                                    rnorm(n=8,mean=100,sd=20)))
+
+
+# calculate means and variances
+group.means <- tapply(no.diff.data$growth,no.diff.data$group,mean)
+group.vars  <- tapply(no.diff.data$growth,no.diff.data$group,var)
+
+
+```
+# ONE WAY ANOVA
+
+**The effect of salinity on snow pea growth**
+
+
+
+
+# POWER FOR ANOVA
+
+``` {r, power}
+
+# calculates power for a sample size 10
+
+power.anova.test(groups=4,n=10,between.var=var(c(4,5,6,7)),within.var=5,sig.level=0.05,power=NULL)
+
+# calculates sample size n for 0.9 power
+power.anova.test(groups=4,n=NULL,between.var=var(c(4,5,6,7)),within.var=5,sig.level=0.05,power = 0.90)
+
+```
+
+# TWO WAY FACTORIAL ANOVA
+
+**Oysters** 
+
+``` {r, oysters}
+
+# imports oysters data into dataframe oysters
+oysters <- read.csv("oysters.csv", header = TRUE)
+View(oysters)
+
+# exploring oyster data
+
+names(oysters)            # lists the names of the variable
+summary(oysters)          # presents summary of variables
+head(oysters)             # lists first few lines of dataframe
+levels(oysters$treatment) # lists levels for treatment variable
+levels(oysters$height)    # lists levels for height variable
+
+# metadata:
+# treatment -- Invasive/Native oyster species
+# height    -- High/Low position on beach
+# nlive     -- number of oysters alive after 6 months
+# av.size   -- average sizes of oysters (mm)
+
+# fits two-way model, response and predictor are variables in data
+# creates the interaction variable
+oysters$interaction <- interaction(oysters$height,oysters$treatment)
+
+# plot data
+# boxplots
+boxplot(nlive~height,oysters,las=1)
+boxplot(nlive~treatment,oysters,las=1)
+boxplot(nlive~interaction,oysters,las=1)
+
+# evaluate interactions graphically
+interaction.plot(oysters$treatment,oysters$height,oysters$nlive,xlab='treatment',ylab='number alive',las=1)
+
+# assess model assumptions
+oyster.model <- aov(nlive~treatment*height,data = oysters) 
+
+# check normality assumptions graphically
+plot(oyster.model)
+
+# performs bartlett's test for variance homogeneity assumption
+bartlett.test(nlive~interaction,oysters)
+
+# performs Levene's test for variance homogeneity assumption
+
+# install.packages('car') #uncomment if car needs to be installed
+library(car)
+leveneTest(nlive ~ interaction,oysters)
+
+#analyse data
+anova(oyster.model) # perform ANOVA on model
+
+# perform post hoc test on model if effects are significant
+TukeyHSD(oyster.model)
+
+```
+
+**The direct and indirect effects of Myrtle rust in Australian rainforests**
+
+```{r, myrtle rust}
+
+# libraries ----
+
+library(readr) # to read csv file
+library(car) # for Levene's test
+
+# data logistics ----
+## data import
+MyrtleData <- read.csv("myrtle_data.csv", header = TRUE)
+View(MyrtleData)
+
+## rename columns for easier use
+names(MyrtleData) # get column names - check for readability 
+new_names <- c("site", "plot", "treatment", "canopy", "seedling", "occur") # create a container "c()" with the new names
+names(MyrtleData) <- new_names # apply the new names to the 'names' of the dataset
+head(MyrtleData) # check new column names
+
+## set treatment and site as factors
+MyrtleData$treatment <- as.factor(MyrtleData$treatment)
+MyrtleData$site <- as.factor(MyrtleData$site)
+summary(MyrtleData)
+
+## pull means and standard errors
+### canopy cover
+canopy_treatment_means <- tapply(MyrtleData$canopy,MyrtleData$treatment,mean)
+canopy_treatment_se <- tapply(MyrtleData$canopy,MyrtleData$treatment,sd)/sqrt(30)
+canopy_site_means <- tapply(MyrtleData$canopy,MyrtleData$site,mean)
+canopy_site_se <- tapply(MyrtleData$canopy,MyrtleData$site,sd)/sqrt(30)
+
+### co-occurring species abundance
+occur_treatment_means <- tapply(MyrtleData$occur,MyrtleData$treatment,mean)
+occur_treatment_se <- tapply(MyrtleData$occur,MyrtleData$treatment,sd)/sqrt(30)
+occur_site_means <- tapply(MyrtleData$occur,MyrtleData$site,mean)
+occur_site_se <- tapply(MyrtleData$occur,MyrtleData$site,sd)/sqrt(30)
+```

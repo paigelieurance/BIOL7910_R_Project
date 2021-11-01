@@ -1,0 +1,1023 @@
+---
+title: "Workshop 4 - AusTraits"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+- get Austraits data into R from Zenodo/Github
+- for my database: filter Austraits by taxon_name and export all trait observations for these species (or a subset)
+- add traits from other dataset Threatened_spp_traits_OEH.xls
+- final database should contain at least 50 species with a broad range of functional traits and taxonomic families 
+
+DATABASE HEADINGS
+species
+- minimum 50 species from CPW, WSDRF, Woko NP
+- include all diagnostic species for CPW and WSDRF
+- any additional species to add re RBG Mount Annan? 
+
+traits
+- seed mass
+- other quantitative seed traits 
+- dormancy type
+- taxonomy (family)
+- fruit type (pod, fleshy)
+- dispersal mode
+- growth form
+
+germination data/protocol info
+- see links from Katherine from RBG
+- also see word doc for additional websites/places to find germ data 
+- Kew Botanic Gardens, SA Seedbank, handbook Charlotte had (by genus)
+
+seed accession data from ABG
+- availability in seedbank
+- date of collection
+- location of collection (provenance - lat + long)
+- germination ?
+
+community
+- CPW
+- WSDRF
+- Woko NP 
+
+```{r data}
+# INSTALLS
+install.packages("remotes")
+remotes::install_github("traitecoevo/austraits", build_vignettes = FALSE)
+
+# LIBRARIES
+library(remotes)
+library(austraits)
+library(stringr)
+library(tidyverse)
+
+# load data into R
+austraits <- load_austraits() # loads most recent version of AusTraits into R
+
+```
+
+# EXTRACTING DATA BY TRAIT
+
+## Example - specific leaf area and all leaf traits
+
+```{r example}
+
+# Extract one particular trait and assigning it to an object
+sla_data <- extract_trait(austraits, "specific_leaf_area")
+
+# Extracting all leaf associated data and assigning it to an object
+traits <- austraits$traits$trait_name %>% unique()  # all possible traits 
+leaf_traits <- traits[str_which(traits, "leaf")] # extracting data where "leaf" occurs in the trait_name
+leaf_data <- extract_trait(austraits, leaf_traits) 
+
+```
+
+## Other trait data (for database)
+* Seed data
+* Dispersal data
+* Dormancy data
+* Fruit data
+* Growth data
+* Germination data
+
+```{r broad traits}
+
+# Extracting all seed associated data and assigning it to an object
+seed_traits <- traits[str_which(traits, "seed")]
+seed_data <- extract_trait(austraits, seed_traits)
+
+dispersal_traits <- traits[str_which(traits, "dispersal")]
+dispersal_data <- extract_trait(austraits, dispersal_traits)
+
+dormancy_traits <- traits[str_which(traits, "dormancy")]
+dormancy_data <- extract_trait(austraits, dormancy_traits)
+
+fruit_traits <- traits[str_which(traits, "fruit")]
+fruit_data <- extract_trait(austraits, fruit_traits)
+
+growth_traits <- traits[str_which(traits, "growth")]
+growth_data <- extract_trait(austraits, growth_traits)
+
+germination_traits <- traits[str_which(traits, "germination")]
+germination_data <- extract_trait(austraits, germination_traits)
+```
+
+# Extracting SINGLE PARTICULAR traits (per trait group) and assigning them to objects
+
+```{r single seed traits}
+# SEED TRAITS
+
+## seed_length
+seed_length_data <- extract_trait(austraits, "seed_length")
+
+## seed_width
+seed_width_data <- extract_trait(austraits, "seed_width")
+
+## seed_mass
+seed_mass_data <- extract_trait(austraits, "seed_mass")
+
+## seed_shape
+seed_shape_data <- extract_trait(austraits, "seed_shape")
+
+```
+
+```{r single dispersal traits}
+# DISPERSAL TRAITS
+
+## dispersal_appendage
+dispersal_appendage_data <- extract_trait(austraits, "dispersal_appendage")
+
+## dispersal_syndrome
+dispersal_syndrome_data <- extract_trait(austraits, "dispersal_syndrome")
+
+```
+
+```{r single dormancy traits}
+# DORMANCY TRAITS
+
+## dormancy_type
+dormancy_type_data <- extract_trait(austraits, "dormancy_type")
+
+```
+
+```{r single fruit traits}
+# FRUIT TRAITS
+
+## fruit_type
+fruit_type_data <- extract_trait(austraits, "fruit_type")
+
+## fruit_type_functional
+fruit_type_functional_data <- extract_trait(austraits, "fruit_type_functional")
+
+```
+
+```{r single growth traits}
+# GROWTH TRAITS 
+
+## plant_growth_form
+plant_growth_form_data <- extract_trait(austraits, "plant_growth_form")
+
+## growth_habit
+growth_habit_data <- extract_trait(austraits, "growth_habit")
+
+```
+
+```{r single germination traits}
+# GERMINATION TRAITS
+
+## germination_treatment
+germination_treatment_data <- extract_trait(austraits, "germination_treatment")
+
+## germination
+germination_data <- extract_trait(austraits, "germination")
+
+```
+
+# EXTRACTING TRAIT DATA BY TAXA
+
+## All taxa of interest
+
+### Use the filter button at the top of the dataset to view by taxa or by trait
+
+```{r all taxa data}
+
+# all species of interest
+all_species_data <- extract_trait(austraits,
+                    trait_names = c("seed_length",
+                                    "seed_width",
+                                    "seed_mass",
+                                    "seed_shape",
+                                    "dispersal_appendage",
+                                    "dispersal_syndrome",
+                                    "dormancy_type",
+                                    "fruit_type",
+                                    "fruit_type_functional",
+                                    "plant_growth_form",
+                                    "growth_habit",
+                                    "germination_treatment",
+                                    "germination"),
+                    taxon_names = c("Acacia falcata",
+                                  "Acacia decurrens",
+                                  "Acacia parramattensis",
+                                  "Alectryon subcinereus",
+                                  "Angophora floribunda",
+                                  "Angophora subvelutina",
+                                  "Aphanopetalum resinosum",
+                                  "Argyrodendron actinophyllum",
+                                  "Aristida ramosa",
+                                  "Brachychiton acerifolius",
+                                  "Brachychiton populneus",
+                                  "Breynia oblongifolia",
+                                  "Brunoniella australis",
+                                  "Bursaria spinosa",
+                                  "Casuarina cunninghamia",
+                                  "Cayratia clematidea",
+                                  "Chloris truncata",
+                                  "Chloris ventricosa",
+                                  "Cissus antarctica",
+                                  "Citronella moorei",
+                                  "Clematis glycinoides",
+                                  "Clerodendrum tomentosum",
+                                  "Corymbia maculata",
+                                  "Cymbopogon refractus",
+                                  "Daviesia ulicifolia",
+                                  "Dendrocnide excelsa",
+                                  "Desmodium varians",
+                                  "Dichelachne micrantha",
+                                  "Dillwynia sieberi",
+                                  "Dodonaea viscosa",
+                                  "Dysoxylum fraserianum",
+                                  "Einadia hastata",
+                                  "Einadia nutans",
+                                  "Elymus scabrus",
+                                  "Eragrostis leptostachya",
+                                  "Eucalyptus acmenoides",
+                                  "Eucalyptus biturbinata",
+                                  "Eucalyptus crebra",
+                                  "Eucalyptus eugeniodes",
+                                  "Eucalyptus fibrosa",
+                                  "Eucalyptus laevopinea",
+                                  "Eucalyptus moluccana",
+                                  "Eucalyptus polyanthemos",
+                                  "Eucalyptus tereticornis",
+                                  "Eustrephus latifolius",
+                                  "Ficus macrophylla",
+                                  "Geranium homeanum",
+                                  "Glycine tabacina",
+                                  "Hardenbergia violacea",
+                                  "Indigofera australis",
+                                  "Melaleuca decora",
+                                  "Melaleuca styphelioides",
+                                  "Melia azedarach",
+                                  "Microlaena stipoides",
+                                  "Notolaea longifolia",
+                                  "Olearia viscidula",
+                                  "Oxytes brachypoda",
+                                  "Pandorea pandorana",
+                                  "Pittosporum revolutum",
+                                  "Plectranthus parviflorus",
+                                  "Poa labillardieri",
+                                  "Polyscias murrayi",
+                                  "Rubus parvifolius",
+                                  "Solanum prinophyllum",
+                                  "Stephania japonica",
+                                  "Syncarpia glomulifera",
+                                  "Synoum glandulosum",
+                                  "Themeda triandra",
+                                  "Toona ciliata",
+                                  "Urtica incisa",
+                                  "Wahlenbergia gracilis")) 
+
+View(all_species_data[["traits"]])
+```
+
+# Creating additional (smaller) datasets of quantitative traits to pull mean values for each species
+
+# SEED MASS OVERALL
+
+```{r seed_mass dataset}
+
+# create new dataset of just seed_mass
+all_species_mass <- extract_trait(austraits,
+                    trait_names = "seed_mass",
+                    taxon_names = c("Acacia falcata",
+                                  "Acacia decurrens",
+                                  "Acacia parramattensis",
+                                  "Alectryon subcinereus",
+                                  "Angophora floribunda",
+                                  "Angophora subvelutina",
+                                  "Aphanopetalum resinosum",
+                                  "Argyrodendron actinophyllum",
+                                  "Aristida ramosa",
+                                  "Brachychiton acerifolius",
+                                  "Brachychiton populneus",
+                                  "Breynia oblongifolia",
+                                  "Brunoniella australis",
+                                  "Bursaria spinosa",
+                                  "Casuarina cunninghamia",
+                                  "Cayratia clematidea",
+                                  "Chloris truncata",
+                                  "Chloris ventricosa",
+                                  "Cissus antarctica",
+                                  "Citronella moorei",
+                                  "Clematis glycinoides",
+                                  "Clerodendrum tomentosum",
+                                  "Corymbia maculata",
+                                  "Cymbopogon refractus",
+                                  "Daviesia ulicifolia",
+                                  "Dendrocnide excelsa",
+                                  "Desmodium varians",
+                                  "Dichelachne micrantha",
+                                  "Dillwynia sieberi",
+                                  "Dodonaea viscosa",
+                                  "Dysoxylum fraserianum",
+                                  "Einadia hastata",
+                                  "Einadia nutans",
+                                  "Elymus scabrus",
+                                  "Eragrostis leptostachya",
+                                  "Eucalyptus acmenoides",
+                                  "Eucalyptus biturbinata",
+                                  "Eucalyptus crebra",
+                                  "Eucalyptus eugeniodes",
+                                  "Eucalyptus fibrosa",
+                                  "Eucalyptus laevopinea",
+                                  "Eucalyptus moluccana",
+                                  "Eucalyptus polyanthemos",
+                                  "Eucalyptus tereticornis",
+                                  "Eustrephus latifolius",
+                                  "Ficus macrophylla",
+                                  "Geranium homeanum",
+                                  "Glycine tabacina",
+                                  "Hardenbergia violacea",
+                                  "Indigofera australis",
+                                  "Melaleuca decora",
+                                  "Melaleuca styphelioides",
+                                  "Melia azedarach",
+                                  "Microlaena stipoides",
+                                  "Notolaea longifolia",
+                                  "Olearia viscidula",
+                                  "Oxytes brachypoda",
+                                  "Pandorea pandorana",
+                                  "Pittosporum revolutum",
+                                  "Plectranthus parviflorus",
+                                  "Poa labillardieri",
+                                  "Polyscias murrayi",
+                                  "Rubus parvifolius",
+                                  "Solanum prinophyllum",
+                                  "Stephania japonica",
+                                  "Syncarpia glomulifera",
+                                  "Synoum glandulosum",
+                                  "Themeda triandra",
+                                  "Toona ciliata",
+                                  "Urtica incisa",
+                                  "Wahlenbergia gracilis"))
+
+View(all_species_mass[["traits"]])
+
+# set seed_mass as a numeric variable 
+all_species_mass$value <- as.numeric(all_species_mass$value)
+
+# can use if making a for loop
+unique((all_species_mass[["traits"]])$taxon_name)
+```
+
+# MEAN SEED MASS PER SPECIES
+
+``` {r mean seed_mass per species}
+
+(mean_seed_mass_Acacia_decurrens <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Acacia decurrens" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Acacia_falcata <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Acacia falcata" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Acacia_implexa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Acacia implexa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Acacia_parramattensis <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Acacia parramattensis" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Alectryon_subcinereus <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Alectryon subcinereus" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Angophora_floribunda <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Angophora floribunda" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Angophora_subvelutina <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Angophora subvelutina" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Aphanopetalum_resinosum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Aphanopetalum resinosum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Argyrodendron_actinophyllum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Argyrodendron actinophyllum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Aristida_ramosa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Aristida ramosa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Brachychiton_acerifolius <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Brachychiton acerifolius" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Brachychiton_populneus <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Brachychiton populneus" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Breynia_oblongifolia <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Breynia oblongifolia" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Brunoniella_australis <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Brunoniella australis" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Bursaria_spinosa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Bursaria spinosa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Casuarina_cunninghamia <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Casuarina cunninghamia" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Cayratia_clematidea <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Cayratia clematidea" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Chloris_truncata <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Chloris truncata" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Chloris_ventricosa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Chloris ventricosa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Cissus_antarctica <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Cissus antarctica" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Citronella_moorei <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Citronella moorei" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Clematis_glycinoides <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Clematis glycinoides" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Clerodendrum_tomentosum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Clerodendrum tomentosum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Corymbia_maculata <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Corymbia maculata" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Cymbopogon_refractus <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Cymbopogon refractus" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Daviesia_ulicifolia <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Daviesia ulicifolia" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Dendrocnide_excelsa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Dendrocnide excelsa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Desmodium_varians <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Desmodium varians" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Dichelachne_micrantha <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Dichelachne micrantha" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Dillwynia_sieberi <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Dillwynia sieberi" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Dodonaea_viscosa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Dodonaea viscosa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Dysoxylum_fraserianum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Dysoxylum fraserianum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Einadia_hastata <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Einadia hastata" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Einadia_nutans <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Einadia nutans" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Elymus_scabrus <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Elymus scabrus" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eragrostis_leptostachya <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eragrostis leptostachya" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_acmenoides <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus acmenoides" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_biturbinata <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus biturbinata" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_crebra <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus crebra" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_eugeniodes <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus eugeniodes" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_fibrosa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus fibrosa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_laevopinea <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus laevopinea" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_moluccana <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus moluccana" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_polyanthemos <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus polyanthemos" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eucalyptus_tereticornis <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eucalyptus tereticornis" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Eustrephus_latifolius <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Eustrephus latifolius" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Ficus_macrophylla <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Ficus macrophylla" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Geranium_homeanum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Geranium homeanum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Glycine_tabacina <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Glycine tabacina" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Hardenbergia_violacea <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Hardenbergia violacea" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Indigofera_australis <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Indigofera australis" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Melaleuca_decora <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Melaleuca decora" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Melaleuca_styphelioides <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Melaleuca styphelioides" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Melia_azedarach <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Melia azedarach" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Microlaena_stipoides <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Microlaena stipoides" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Notolaea_longifolia <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Notolaea longifolia" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Olearia_viscidula <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Olearia viscidula" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Oxytes_brachypoda <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Oxytes brachypoda" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Pandorea_pandorana <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Pandorea pandorana" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Pittosporum_revolutum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Pittosporum revolutum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Plectranthus_parviflorus <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Plectranthus parviflorus" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Poa_labillardieri <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Poa labillardieri" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Polyscias_murrayi <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Polyscias murrayi" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Rubus_parvifolius <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Rubus parvifolius" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Solanum_prinophyllum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Solanum prinophyllum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Stephania_japonica <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Stephania japonica" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Syncarpia_glomulifera <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Syncarpia glomulifera" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Synoum_glandulosum <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Synoum glandulosum" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Themeda_triandra <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Themeda triandra" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Toona_ciliata <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Toona ciliata" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Urtica_incisa <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Urtica incisa" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+(mean_seed_mass_Wahlenbergia_gracilis <- mean(all_species_mass[["traits"]]$value[all_species_mass[["traits"]]$taxon_name == "Wahlenbergia gracilis" & all_species_mass[["traits"]]$trait_name == "seed_mass"]))
+
+```
+
+# SEED LENGTH OVERALL
+
+```{r seed_length dataset}
+
+# create new dataset of just seed_length
+all_species_length <- extract_trait(austraits,
+                    trait_names = "seed_length",
+                    taxon_names = c("Acacia falcata",
+                                  "Acacia decurrens",
+                                  "Acacia parramattensis",
+                                  "Alectryon subcinereus",
+                                  "Angophora floribunda",
+                                  "Angophora subvelutina",
+                                  "Aphanopetalum resinosum",
+                                  "Argyrodendron actinophyllum",
+                                  "Aristida ramosa",
+                                  "Brachychiton acerifolius",
+                                  "Brachychiton populneus",
+                                  "Breynia oblongifolia",
+                                  "Brunoniella australis",
+                                  "Bursaria spinosa",
+                                  "Casuarina cunninghamia",
+                                  "Cayratia clematidea",
+                                  "Chloris truncata",
+                                  "Chloris ventricosa",
+                                  "Cissus antarctica",
+                                  "Citronella moorei",
+                                  "Clematis glycinoides",
+                                  "Clerodendrum tomentosum",
+                                  "Corymbia maculata",
+                                  "Cymbopogon refractus",
+                                  "Daviesia ulicifolia",
+                                  "Dendrocnide excelsa",
+                                  "Desmodium varians",
+                                  "Dichelachne micrantha",
+                                  "Dillwynia sieberi",
+                                  "Dodonaea viscosa",
+                                  "Dysoxylum fraserianum",
+                                  "Einadia hastata",
+                                  "Einadia nutans",
+                                  "Elymus scabrus",
+                                  "Eragrostis leptostachya",
+                                  "Eucalyptus acmenoides",
+                                  "Eucalyptus biturbinata",
+                                  "Eucalyptus crebra",
+                                  "Eucalyptus eugeniodes",
+                                  "Eucalyptus fibrosa",
+                                  "Eucalyptus laevopinea",
+                                  "Eucalyptus moluccana",
+                                  "Eucalyptus polyanthemos",
+                                  "Eucalyptus tereticornis",
+                                  "Eustrephus latifolius",
+                                  "Ficus macrophylla",
+                                  "Geranium homeanum",
+                                  "Glycine tabacina",
+                                  "Hardenbergia violacea",
+                                  "Indigofera australis",
+                                  "Melaleuca decora",
+                                  "Melaleuca styphelioides",
+                                  "Melia azedarach",
+                                  "Microlaena stipoides",
+                                  "Notolaea longifolia",
+                                  "Olearia viscidula",
+                                  "Oxytes brachypoda",
+                                  "Pandorea pandorana",
+                                  "Pittosporum revolutum",
+                                  "Plectranthus parviflorus",
+                                  "Poa labillardieri",
+                                  "Polyscias murrayi",
+                                  "Rubus parvifolius",
+                                  "Solanum prinophyllum",
+                                  "Stephania japonica",
+                                  "Syncarpia glomulifera",
+                                  "Synoum glandulosum",
+                                  "Themeda triandra",
+                                  "Toona ciliata",
+                                  "Urtica incisa",
+                                  "Wahlenbergia gracilis")) 
+
+View(all_species_length[["traits"]])
+
+# set seed_length as a numeric variable 
+all_species_length$value <- as.numeric(all_species_length$value)
+
+```
+
+# MEAN SEED LENGTH PER SPECIES
+
+``` {r mean seed_length per species}
+
+(mean_seed_length_Acacia_decurrens <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Acacia decurrens" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Acacia_falcata <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Acacia falcata" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Acacia_implexa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Acacia implexa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Acacia_parramattensis <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Acacia parramattensis" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Alectryon_subcinereus <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Alectryon subcinereus" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Angophora_floribunda <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Angophora floribunda" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Angophora_subvelutina <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Angophora subvelutina" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Aphanopetalum_resinosum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Aphanopetalum resinosum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Argyrodendron_actinophyllum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Argyrodendron actinophyllum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Aristida_ramosa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Aristida ramosa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Brachychiton_acerifolius <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Brachychiton acerifolius" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Brachychiton_populneus <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Brachychiton populneus" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Breynia_oblongifolia <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Breynia oblongifolia" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Brunoniella_australis <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Brunoniella australis" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Bursaria_spinosa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Bursaria spinosa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Casuarina_cunninghamia <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Casuarina cunninghamia" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Cayratia_clematidea <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Cayratia clematidea" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Chloris_truncata <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Chloris truncata" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Chloris_ventricosa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Chloris ventricosa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Cissus_antarctica <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Cissus antarctica" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Citronella_moorei <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Citronella moorei" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Clematis_glycinoides <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Clematis glycinoides" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Clerodendrum_tomentosum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Clerodendrum tomentosum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Corymbia_maculata <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Corymbia maculata" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Cymbopogon_refractus <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Cymbopogon refractus" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Daviesia_ulicifolia <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Daviesia ulicifolia" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Dendrocnide_excelsa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Dendrocnide excelsa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Desmodium_varians <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Desmodium varians" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Dichelachne_micrantha <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Dichelachne micrantha" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Dillwynia_sieberi <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Dillwynia sieberi" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Dodonaea_viscosa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Dodonaea viscosa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Dysoxylum_fraserianum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Dysoxylum fraserianum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Einadia_hastata <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Einadia hastata" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Einadia_nutans <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Einadia nutans" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Elymus_scabrus <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Elymus scabrus" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eragrostis_leptostachya <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eragrostis leptostachya" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_acmenoides <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus acmenoides" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_biturbinata <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus biturbinata" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_crebra <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus crebra" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_eugeniodes <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus eugeniodes" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_fibrosa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus fibrosa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_laevopinea <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus laevopinea" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_moluccana <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus moluccana" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_polyanthemos <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus polyanthemos" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eucalyptus_tereticornis <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eucalyptus tereticornis" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Eustrephus_latifolius <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Eustrephus latifolius" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Ficus_macrophylla <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Ficus macrophylla" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Geranium_homeanum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Geranium homeanum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Glycine_tabacina <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Glycine tabacina" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Hardenbergia_violacea <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Hardenbergia violacea" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Indigofera_australis <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Indigofera australis" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Melaleuca_decora <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Melaleuca decora" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Melaleuca_styphelioides <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Melaleuca styphelioides" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Melia_azedarach <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Melia azedarach" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Microlaena_stipoides <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Microlaena stipoides" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Notolaea_longifolia <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Notolaea longifolia" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Olearia_viscidula <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Olearia viscidula" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Oxytes_brachypoda <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Oxytes brachypoda" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Pandorea_pandorana <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Pandorea pandorana" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Pittosporum_revolutum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Pittosporum revolutum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Plectranthus_parviflorus <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Plectranthus parviflorus" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Poa_labillardieri <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Poa labillardieri" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Polyscias_murrayi <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Polyscias murrayi" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Rubus_parvifolius <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Rubus parvifolius" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Solanum_prinophyllum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Solanum prinophyllum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Stephania_japonica <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Stephania japonica" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Syncarpia_glomulifera <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Syncarpia glomulifera" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Synoum_glandulosum <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Synoum glandulosum" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Themeda_triandra <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Themeda triandra" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Toona_ciliata <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Toona ciliata" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Urtica_incisa <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Urtica incisa" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+(mean_seed_length_Wahlenbergia_gracilis <- mean(all_species_length[["traits"]]$value[all_species_length[["traits"]]$taxon_name == "Wahlenbergia gracilis" & all_species_length[["traits"]]$trait_name == "seed_length"]))
+
+```
+
+# SEED WIDTH OVERALL
+
+```{r seed_width dataset}
+
+# create new dataset of just seed_width
+all_species_width <- extract_trait(austraits,
+                    trait_names = "seed_width",
+                    taxon_names = c("Acacia falcata",
+                                  "Acacia decurrens",
+                                  "Acacia parramattensis",
+                                  "Alectryon subcinereus",
+                                  "Angophora floribunda",
+                                  "Angophora subvelutina",
+                                  "Aphanopetalum resinosum",
+                                  "Argyrodendron actinophyllum",
+                                  "Aristida ramosa",
+                                  "Brachychiton acerifolius",
+                                  "Brachychiton populneus",
+                                  "Breynia oblongifolia",
+                                  "Brunoniella australis",
+                                  "Bursaria spinosa",
+                                  "Casuarina cunninghamia",
+                                  "Cayratia clematidea",
+                                  "Chloris truncata",
+                                  "Chloris ventricosa",
+                                  "Cissus antarctica",
+                                  "Citronella moorei",
+                                  "Clematis glycinoides",
+                                  "Clerodendrum tomentosum",
+                                  "Corymbia maculata",
+                                  "Cymbopogon refractus",
+                                  "Daviesia ulicifolia",
+                                  "Dendrocnide excelsa",
+                                  "Desmodium varians",
+                                  "Dichelachne micrantha",
+                                  "Dillwynia sieberi",
+                                  "Dodonaea viscosa",
+                                  "Dysoxylum fraserianum",
+                                  "Einadia hastata",
+                                  "Einadia nutans",
+                                  "Elymus scabrus",
+                                  "Eragrostis leptostachya",
+                                  "Eucalyptus acmenoides",
+                                  "Eucalyptus biturbinata",
+                                  "Eucalyptus crebra",
+                                  "Eucalyptus eugeniodes",
+                                  "Eucalyptus fibrosa",
+                                  "Eucalyptus laevopinea",
+                                  "Eucalyptus moluccana",
+                                  "Eucalyptus polyanthemos",
+                                  "Eucalyptus tereticornis",
+                                  "Eustrephus latifolius",
+                                  "Ficus macrophylla",
+                                  "Geranium homeanum",
+                                  "Glycine tabacina",
+                                  "Hardenbergia violacea",
+                                  "Indigofera australis",
+                                  "Melaleuca decora",
+                                  "Melaleuca styphelioides",
+                                  "Melia azedarach",
+                                  "Microlaena stipoides",
+                                  "Notolaea longifolia",
+                                  "Olearia viscidula",
+                                  "Oxytes brachypoda",
+                                  "Pandorea pandorana",
+                                  "Pittosporum revolutum",
+                                  "Plectranthus parviflorus",
+                                  "Poa labillardieri",
+                                  "Polyscias murrayi",
+                                  "Rubus parvifolius",
+                                  "Solanum prinophyllum",
+                                  "Stephania japonica",
+                                  "Syncarpia glomulifera",
+                                  "Synoum glandulosum",
+                                  "Themeda triandra",
+                                  "Toona ciliata",
+                                  "Urtica incisa",
+                                  "Wahlenbergia gracilis")) 
+
+View(all_species_width[["traits"]])
+
+# set seed_length as a numeric variable 
+all_species_width$value <- as.numeric(all_species_width$value)
+
+```
+
+# MEAN SEED WIDTH PER SPECIES
+
+``` {r mean seed_width per species}
+
+(mean_seed_width_Acacia_decurrens <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Acacia decurrens" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Acacia_falcata <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Acacia falcata" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Acacia_implexa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Acacia implexa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Acacia_parramattensis <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Acacia parramattensis" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Alectryon_subcinereus <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Alectryon subcinereus" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Angophora_floribunda <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Angophora floribunda" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Angophora_subvelutina <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Angophora subvelutina" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Aphanopetalum_resinosum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Aphanopetalum resinosum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Argyrodendron_actinophyllum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Argyrodendron actinophyllum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Aristida_ramosa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Aristida ramosa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Brachychiton_acerifolius <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Brachychiton acerifolius" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Brachychiton_populneus <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Brachychiton populneus" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Breynia_oblongifolia <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Breynia oblongifolia" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Brunoniella_australis <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Brunoniella australis" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Bursaria_spinosa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Bursaria spinosa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Casuarina_cunninghamia <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Casuarina cunninghamia" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Cayratia_clematidea <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Cayratia clematidea" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Chloris_truncata <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Chloris truncata" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Chloris_ventricosa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Chloris ventricosa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Cissus_antarctica <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Cissus antarctica" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Citronella_moorei <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Citronella moorei" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Clematis_glycinoides <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Clematis glycinoides" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Clerodendrum_tomentosum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Clerodendrum tomentosum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Corymbia_maculata <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Corymbia maculata" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Cymbopogon_refractus <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Cymbopogon refractus" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Daviesia_ulicifolia <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Daviesia ulicifolia" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Dendrocnide_excelsa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Dendrocnide excelsa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Desmodium_varians <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Desmodium varians" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Dichelachne_micrantha <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Dichelachne micrantha" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Dillwynia_sieberi <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Dillwynia sieberi" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Dodonaea_viscosa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Dodonaea viscosa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Dysoxylum_fraserianum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Dysoxylum fraserianum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Einadia_hastata <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Einadia hastata" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Einadia_nutans <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Einadia nutans" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Elymus_scabrus <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Elymus scabrus" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eragrostis_leptostachya <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eragrostis leptostachya" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_acmenoides <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus acmenoides" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_biturbinata <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus biturbinata" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_crebra <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus crebra" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_eugeniodes <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus eugeniodes" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_fibrosa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus fibrosa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_laevopinea <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus laevopinea" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_moluccana <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus moluccana" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_polyanthemos <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus polyanthemos" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eucalyptus_tereticornis <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eucalyptus tereticornis" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Eustrephus_latifolius <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Eustrephus latifolius" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Ficus_macrophylla <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Ficus macrophylla" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Geranium_homeanum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Geranium homeanum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Glycine_tabacina <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Glycine tabacina" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Hardenbergia_violacea <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Hardenbergia violacea" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Indigofera_australis <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Indigofera australis" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Melaleuca_decora <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Melaleuca decora" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Melaleuca_styphelioides <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Melaleuca styphelioides" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Melia_azedarach <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Melia azedarach" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Microlaena_stipoides <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Microlaena stipoides" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Notolaea_longifolia <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Notolaea longifolia" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Olearia_viscidula <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Olearia viscidula" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Oxytes_brachypoda <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Oxytes brachypoda" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Pandorea_pandorana <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Pandorea pandorana" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Pittosporum_revolutum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Pittosporum revolutum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Plectranthus_parviflorus <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Plectranthus parviflorus" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Poa_labillardieri <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Poa labillardieri" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Polyscias_murrayi <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Polyscias murrayi" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Rubus_parvifolius <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Rubus parvifolius" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Solanum_prinophyllum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Solanum prinophyllum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Stephania_japonica <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Stephania japonica" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Syncarpia_glomulifera <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Syncarpia glomulifera" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Synoum_glandulosum <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Synoum glandulosum" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Themeda_triandra <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Themeda triandra" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Toona_ciliata <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Toona ciliata" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Urtica_incisa <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Urtica incisa" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+(mean_seed_width_Wahlenbergia_gracilis <- mean(all_species_width[["traits"]]$value[all_species_width[["traits"]]$taxon_name == "Wahlenbergia gracilis" & all_species_width[["traits"]]$trait_name == "seed_width"]))
+
+```
+
+# Extra: creating for loop functions to determine multiple means 
+## Can be used in the future if mean trait values are needed for many species
+
+``` {r for loops}
+
+# for loop code to determine multiple means (can use for the future)
+data <- mtcars
+
+df_names <- c("Cylinders", "Mean HP", "Mean Weight") # create titles for dataframe
+
+car_means <- NULL # create empty dataframe
+
+for(i in unique(data$cyl)){ # calculates and selects each unique value in 'cyl'
+  mean_cyl <- mean(data$hp[data$cyl == i], na.rm = TRUE) # calculcates the mean HP of each 'cyl'
+  mean_wt <- mean(data$wt[data$cyl == i], na.rm = TRUE) # calculcates the mean weight of each 'cyl'
+  car_means <- rbind(car_means,c(i, mean_cyl, mean_wt)) # binds new entry in new row per 'cyl'
+}
+
+colnames(car_means) <- df_names # apply names to dataframe
+
+car_means # display dataframe
+
+```
+
+# Meeting with Ruby
+## Tips for tackling AusTraits coming into next year
+
+- instead of manually pulling means of quantitative data, try the aggregate function
+
+- even better yet, use the pipe function in Tidyverse:
+        - filter by species of interest first, then group by trait, pipe down,             and mutate to find the mean per species
+        
+- also might be useful to pull all available trait data per species (just to see what is available and any other potential correlates of establishment success)
+
+- Ruby finds pulling different tables per trait and then joining them is useful for collating data of interest 

@@ -1,0 +1,315 @@
+---
+title: "Workshop 1 - Introduction to R and Tidyverse"
+author: "Paige Lieurance"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Benefits of coding in R
+* Reproducible
+* Accurate
+* Can use Stack Overflow (online forum) for any R related questions
+* Large community
+* Resource sharing
+  
+# Rstudio
+
+**Rstudio is an integrated development environment (IDE) for R. It has 4 panes:**
+
+* Console
+* Source (R files)
+* Environment, History, Connections, Tutorials
+* Files, Plots, Packages, Help, Viewer
+
+# Files
+* Script: a text file for storing and running code (comments have a hash-mark before them)
+* R Markdown: an interactive file for writing anything from notes to entire manuscripts - contains code "chunks" for storing and running code - can be easily converted to (knitted into) an html file, a word document, or a PDF
+
+# Variables, Vectors, and Functions
+* Variable: an object that stores information, i.e. a number, text, or a vector
+* Vector: a data structure that contains multiple elements of the same type (class) - using `c()` designates a vector
+* Function: an object that takes arguments (aka numbers or vectors) as inputs, performs a task on those arguments, and sometimes has an output - the output of a function can be stored as a variable
+  
+# Tricks
+* Run button (green play button): run all highlighted or current line of code
+* #: comment out text, this allows you to type notes in a script - it is considered good practice to explain your code as you write it
+* ?function_name: get help on any function
+  
+```{r, include = FALSE}
+
+# PRACTICE 
+
+print(paste0("The sum of 3 and 2 is ", 3+2))  #add 3+2
+mean(c(1,2,3)) #take the mean of 1, 2, and 3
+y <- 3+2  #store the sum of 3 and 2 as a variable called y
+y   #print y
+remove(y)   #remove  y from the environment
+y <- c(1,2,3)   #store the vector of 1, 2, and 3 as a variable called y
+mean(y)   #Use the function, mean(), to calculate the mean of vector y (to calculate the mean of 1, 2, and 3) and print the answer (aka output of the function)
+z <- mean(y) #Store the output from mean(y) in the variable, z
+```
+
+# Character strings
+
+```{r, include = FALSE}
+
+# examples of creating character strings 
+
+my_name <- "Paige"
+my_name # prints
+dogs <- c("rottweiler", "husky", "malamute", "chihuahua", "golden retriever")
+dogs # prints 
+```
+
+**Exercises**
+
+* Make a new variable containing the number 13
+* Make a new variable 1345 times the variable above (doing the calculation in code)
+* Make new variables containing the name of you and your friend
+* Make a vector containing your name and your friend's name.  Hint: use the variables you created in 3.
+
+```{r, echo = TRUE}
+new <- 13
+new2 <- new*1345
+
+my_name <- "Paige"
+friends_name <- "Anthony"
+
+c(my_name, friends_name) # creates a vector with these 2 names
+```
+
+# Directories and R projects
+* R works with your computer's file system 
+* Use `getwd()` to find out where R thinks we are located 
+  
+```{r, include = FALSE}
+getwd() # get working directory - locates the current project within files
+```
+
+* R Project: a file that points R at whatever folder the file is saved in
+* File pane: a mini file explorer for R projects
+
+# Packages and the Tidyverse
+* Package: a collection of functions - sometimes packages contain multiple packages, or multiple collections of functions, i.e. tidyverse. 
+* Install package by using `install.packages("package-name")`
+* Update packages by using `update.packages("package-name")`
+* Load packages by using `library("package-name")`
+* Tidyverse is a useful collection of packages
+* Packages pane: see all installed packages - loaded packages will have a tick
+
+```{r, include = FALSE}
+#install.packages("tidyverse") # uncomment to install 
+```
+
+Loading tidyverse into R: even though it is installed, R cannot use any of the functions from the tidyverse package until it is loaded into the session
+
+```{r, include = FALSE}
+library(tidyverse)
+```
+
+You must reload packages every session - it is easiest to include a code chunk at the beginning of your R markdown or script and run the code prior to every session  
+
+# CSV files and Data Frames
+
+```{r, include = FALSE}
+read_csv("Bats_data.csv") 
+```
+
+**Exercises**
+
+* Store Bats_data.csv in a variable, i.e. bats (you'll need the code above and the assign arrow)
+* Use the View() function to look at the data
+
+```{r}
+bats <- read_csv("Bats_data.csv")
+
+View(bats)
+```
+
+``` {r, include = FALSE}
+summary(bats)
+
+bats %>% # piping
+  View()
+```
+
+# Manipulating Data
+Each column in a data frame is a vector
+
+* $: extracts a vector (column) from the data frame
+  
+```{r, include = FALSE}
+
+bats$Date
+bats$Activity
+
+```
+
+# Logicals in R
+* `==` Equal to
+* `<` Less than
+* `>` Greater than
+* `<=` Less than or equal to 
+* `>=` Greater than or equal to
+* `|` or
+* `&` and
+* `!` not
+
+```{r, include = FALSE}
+5 == 5
+x <- 5
+x == 5
+x > 5
+x >= 5
+x > 5 | x >=5
+x > 5 & x >= 5
+y<- "hello"
+y == "hello"
+x > 5 | y == "hello"
+x > 5 & y == "hello"
+
+```
+
+# Filtering data
+
+```{r, include = FALSE}
+filter(bats, bats$Treatment_thinned == "medium-term")
+filter(bats, Treatment_thinned == "medium_term")
+
+bats %>% 
+  filter(Treatment_thinned == "medium-term") %>% 
+  filter(Foraging > 10)
+
+```
+ 
+**Exercises**
+
+Find the maximum Activity observed on 7/01/2013
+
+* Filter by Date for 7/01/2013
+* Save the filtered data as a new variable, i.e. filtered_bats
+* Use the max() function on the column Activity from your new data frame.
+
+```{r}
+filtered_bats <- bats %>% 
+  filter(Date == "7/01/2013")
+
+max(filtered_bats$Activity)
+```
+
+Use the length() function to find the sample size of all observations on 7/01/2013 and the overall sample size of the bats data set 
+
+``` {r}
+
+n <- length(filtered_bats)
+
+n
+
+overall_n <- length(bats$Site)
+
+overall_n
+
+```
+
+# T test examples
+
+``` {r t test, include = FALSE}
+
+darwin <- read.table(text=
+'pair crossfertilized selffertilized
+     1      23.5             17.4
+     2      12.0             20.4
+     3      21.0             20.0
+     4      22.0             20.0
+     5      19.1             18.4
+     6      21.5             18.6
+     7      22.1             18.6
+     8      20.4             15.3
+     9      18.3             16.5
+     10     21.6             18.0
+     11     23.3             16.3
+     12     21.0             18.0
+     13     22.1             12.8
+     14     23.0             15.5
+     15     12.0             18.0
+     16     2.0             18.0',header=TRUE)
+
+?t.test
+
+head(darwin)
+
+# mean and sd of the differences
+mean <- mean(darwin$crossfertilized-darwin$selffertilized)
+sd <- sd(darwin$crossfertilized-darwin$selffertilized) 
+
+#paired t-test on cross/self fertilized data
+#have to specify paired = true if paired, as the default is 2-sample
+t.test(darwin$crossfertilized,darwin$selffertilized,paired=TRUE) 
+
+#one-sample t test
+t.test(darwin$crossfertilized - darwin$selffertilized,mu=0)
+
+#Welch two-sample t test 
+t.test(darwin$crossfertilized,darwin$selffertilized)
+
+#Student two-sample t test
+t.test(darwin$crossfertilized,darwin$selffertilized,var.equal=TRUE)
+
+#POST-HOC (a posterior) POWER ANALYSIS
+?power.t.test
+power.t.test(n=16,delta=mean,sd=sd,sig.level=0.05,type='paired')
+#12.96% chance that we will get a significant result with the current sample size
+
+#PRE-HOC (a priori) POWER ANALYSIS
+power.t.test(n=NULL,delta=mean,sd=sd,sig.level=0.05,type='paired',power=0.9)
+#need 215 samples to detect a significant result with the above parameters
+
+```
+
+# Resources
+
+Personal Recommendations
+
+- ["RStudio Primers" Step by step interactive tutorials](https://rstudio.cloud/learn/primers)
+- ["R Resources for Beginners"](https://unsw-coders.netlify.app/resources/2021-03-22-beginner-resources/)
+- ["Functions"](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/functions.pdf)
+
+Creating and manipulating variables
+
+- ["Making new variables" on environmentalcomputing](http://environmentalcomputing.net/making-new-variables/)
+- ["Creating R objects" on DataCarpentry](https://datacarpentry.org/R-ecology-lesson/01-intro-to-r.html)
+- ["Software carpentry"'s intor to RStudio'](http://swcarpentry.github.io/r-novice-gapminder/01-rstudio-intro/index.html)
+
+A few resources for loading other file types
+
+- [readxl](https://readxl.tidyverse.org/reference/read_excel.html): Reading data direct from Excel
+- [datapasta](https://cran.r-project.org/web/packages/datapasta/): when copying and pasting data from the web
+- [googlesheets4](https://googlesheets4.tidyverse.org/): for reading data from google sheets
+
+Online courses
+
+- [Environmental Computing](http://environmentalcomputing.net/) 
+- [Software carpentry's R novice lesson](http://swcarpentry.github.io/r-novice-gapminder/)
+- [Datacarpentry's lesson on R for ecology](https://datacarpentry.org/R-ecology-lesson/)
+- [A paper looking at how much R is used in Ecology](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2567)
+- [The tidyverse web page](https://www.tidyverse.org/)
+- [Hadley Wickham's book R for data Science](https://r4ds.had.co.nz/)
+
+
+Learning to code and need inspiration?
+
+- [Anyone can code](https://www.youtube.com/watch?v=qYZF6oIZtfc&list=PLzdnOPI1iJNe1WmdkMG-Ca8cLQpdEAL7Q)
+- [Coding is the new literacy](https://www.youtube.com/watch?v=MwLXrN0Yguk&list=PLzdnOPI1iJNe1WmdkMG-Ca8cLQpdEAL7Q)
+- [What most schools don't teach](https://www.youtube.com/watch?v=nKIu9yen5nc&feature=c4-overview-vl&list=PLzdnOPI1iJNe1WmdkMG-Ca8cLQpdEAL7Q)
+- when coding saves you time, [from XKCD](http://xkcd.com/1205/)
+
+Why good code matters
+
+- [Why I want to write nice R code](http://nicercode.github.io/blog/2013-04-05-why-nice-code/)
+- [Science has a credibility problem](http://www.economist.com/news/leaders/21588069-scientific-research-has-changed-world-now-it-needs-change-itself-how-science-goes-wrong)
+
+
+
