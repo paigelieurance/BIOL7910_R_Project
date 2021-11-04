@@ -1,6 +1,5 @@
 ---
 title: "Workshop 3 - Linear regression and correlation"
-author: "Paige Lieurance"
 output: pdf_document
 ---
 
@@ -8,9 +7,94 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Simple linear regression
+# SIMPLE LINEAR REGRESSION
 
-``` {r}
+* The simple linear regression is used to predict a quantitative outcome y on the basis of one single predictor variable x
+* The goal is to build a mathematical model (or formula) that defines y as a function of the x variable
+* Once we build a statistically significant model, it’s possible to use it for predicting future outcome on the basis of new x values
+
+## Impact of advertising medias on sales
+
+* We’ll use the marketing data set [datarium package]. It contains the impact of three advertising medias (youtube, facebook and newspaper) on sales. Data are the advertising budget in thousands of dollars along with the sales. The advertising experiment has been repeated 200 times with different budgets and the observed sales have been recorded.
+* We want to predict future sales on the basis of advertising budget spent on youtube.
+
+
+``` {r, advertising}
+
+# install the datarium package
+devtools::install_github("kassambara/datarium")
+
+# load the package
+data("marketing", package = "datarium")
+
+# inspect marketing data
+head(marketing, 4)
+
+# create a scatter plot displaying the sales units versus youtube advertising budget and add a smoothed line
+ggplot(marketing, aes(x = youtube, y = sales)) +
+  geom_point() +
+  stat_smooth()
+```
+
+The graph above suggests a linearly increasing relationship between the sales and the youtube variables. This is a good thing, because, one important assumption of the linear regression is that the relationship between the outcome and predictor variables is linear and additive.
+
+``` {r, coefficient}
+
+# compute the correlation coefficient between the two variables
+cor(marketing$sales, marketing$youtube)
+```
+
+The correlation coefficient measures the level of the association between two variables x and y. Its value ranges between -1 (perfect negative correlation: when x increases, y decreases) and +1 (perfect positive correlation: when x increases, y increases).
+
+A value closer to 0 suggests a weak relationship between the variables. A low correlation (-0.2 < x < 0.2) probably suggests that much of variation of the outcome variable (y) is not explained by the predictor (x). In such case, we should probably look for better predictor variables.
+
+In our example, the correlation coefficient is large enough, so we can continue by building a linear model of y as a function of x.
+
+**Analysis** 
+The simple linear regression tries to find the best line to predict sales on the basis of youtube advertising budget.
+
+The linear model equation can be written as follow: sales = b0 + b1 * youtube
+
+```{r analysis}
+
+# fit linear model with youtube (budget $) as the predictor and sales as the outcome
+model <- lm(sales ~ youtube, data = marketing)
+model
+
+```
+
+**Interpretation**
+From the output above:
+* The estimated regression line equation can be written as follow: sales = 8.44 + 0.048*youtube
+
+* The intercept (b0) is 8.44. It can be interpreted as the predicted sales unit for a zero youtube advertising budget. Recall that, we are operating in units of thousand dollars. This means that, for a youtube advertising budget equal zero, we can expect a sale of 8.44 *1000 = 8440 dollars.
+
+* the regression beta coefficient for the variable youtube (b1), also known as the slope, is 0.048. This means that, for a youtube advertising budget equal to 1000 dollars, we can expect an increase of 48 units (0.048*1000) in sales. That is, sales = 8.44 + 0.048*1000 = 56.44 units. As we are operating in units of thousand dollars, this represents a sale of 56440 dollars.
+
+**Significance**
+* In the previous section, we built a linear model of sales as a function of youtube advertising budget: sales = 8.44 + 0.048*youtube.
+
+* Before using this formula to predict future sales, you should make sure that this model is statistically significant, that is:
+- there is a statistically significant relationship between the predictor and the outcome variables
+- the model that we built fits very well the data in our hand.
+
+``` {r significance}
+
+summary(model)
+
+```
+
+For a given predictor, the t-statistic (and its associated p-value) tests whether or not there is a statistically significant relationship between a given predictor and the outcome variable, that is whether or not the beta coefficient of the predictor is significantly different from zero.
+
+The statistical hypotheses are as follow:
+* Null hypothesis (H0): the coefficients are equal to zero (i.e., no relationship between x and y)
+* Alternative Hypothesis (Ha): the coefficients are not equal to zero (i.e., there is some relationship between x and y)
+
+In our example, both the p-values for the intercept and the predictor variable are highly significant, so we can reject the null hypothesis, which means that there is a significant association between the predictor and the outcome variables.
+
+## Galapagos Island dataset
+
+``` {r, galapagos1}
 
 #data set has to be in R directory to be read with script
 gala <- read.table('gala.txt',header=TRUE,row.names=1)
@@ -55,14 +139,17 @@ confint(gala.model2)
 #confidence intervals of slope of gala.model2 = 95% chance that data set includes the true mean
 ```
 
-# Multiple linear regression 
+# MULTIPLE LINEAR REGRESSION
 
-``` {r}
+## Galapagos Island dataset
+
+``` {r, galapagos2}
+
 # using same gala data set 
-gala$ln.elev <- log(gala$Elevation)
-m1 <- lm(gala$ln.sp~ln.area,data=gala)
-m2 <- lm(gala$ln.sp~ln.area+ln.elev,data=gala)
-anova(m1,m2) #no significant effect of elevation
+gala$ln.elev <- log(gala$Elevation) # add log transformed elevation column
+m1 <- lm(gala$ln.sp~ln.area,data=gala) # first linear model
+m2 <- lm(gala$ln.sp~ln.area+ln.elev,data=gala) # second linear model
+anova(m1,m2) # runs ANOVA to determine the difference between models
 
 #stepwise selection to evaluate whether there are other significant predictors
 #creating new log transformed columns
@@ -77,5 +164,104 @@ gala.step <- step(gala.full,direction='backward')
 #the lower the AIC the better the fit with the pruning of each variable at each step
 #final model = ln.species~ln.area+ln.scruz (lowest AIC) 
 
+# another example (without data)
+blood.lm <- lm(BloodPressure ~ Age + Stress + Weight, data = blood)
+# BloodPressure = response
+# Age + Stress + Weight = predictors
+# blood = dataframe
+
+summary(blood.lm) # tests for overall signifiance
+# tells us there is a significant overall relationship
+# does not tell us which slope is significant 
+
 ```
 
+# LOGISTIC REGRESSION
+Used for working with a binary response variable
+Not appropriate for a binary predictor variable ???? (e.g. seed placement in pod: centre vs peripheral)
+
+``` {r, logit}
+# example (without data)
+glm(admit ~ gre, mydata, binomial(logit))
+# admit = response variable
+# gre = predictor variable(s)
+# mydata = dataframe
+# binomial = distribution
+# link = logit
+```
+
+The categorical variable y, in general, can assume different values. In the simplest case scenario y is binary meaning that it can assume either the value 1 or 0. In this post we call the model “binomial logistic regression”, since the variable to predict is binary, however, logistic regression can also be used to predict a dependent variable which can assume more than 2 values. In this second case we call the model “multinomial logistic regression”.
+
+## Titanic dataset
+
+``` {r, titanic}
+
+# import data (na.strings used to add NAs for cells without values)
+training.data.raw <- read.csv('train.csv',header=TRUE,na.strings=c(""))
+
+```
+
+**Data cleaning**
+Now we need to check for missing values and look how many unique values there are for each variable using the sapply() function which applies the function passed as argument to each column of the dataframe.
+
+``` {r, sapply}
+
+sapply(training.data.raw,function(x) sum(is.na(x)))
+sapply(training.data.raw, function(x) length(unique(x)))
+
+```
+
+The variable cabin has too many missing values, we will not use it. We will also drop PassengerId since it is only an index and Ticket.
+Using the subset() function we subset the original dataset selecting the relevant columns only.
+
+``` {r, subset}
+
+data <- subset(training.data.raw,select=c(2,3,5,6,7,8,10,12))
+
+```
+
+Now we need to account for the other missing values. R can easily deal with them when fitting a generalized linear model by setting a parameter inside the fitting function. However, personally I prefer to replace the NAs “by hand”, when is possible. There are different ways to do this, a typical approach is to replace the missing values with the average, the median or the mode of the existing one. I’ll be using the average.
+
+``` {r, NAs}
+
+data$Age[is.na(data$Age)] <- mean(data$Age,na.rm=T)
+
+# check the encoding (column types) of the new data subset
+is.factor(data$Sex) # TRUE
+is.factor(data$Embarked) # TRUE
+
+# as for the missing values in Embarked, since there are only two, we will discard those two rows (we could also have replaced the missing values with the mode and keep the datapoints)
+data <- data[!is.na(data$Embarked),]
+rownames(data) <- NULL
+
+```
+
+**Fitting the model**
+We split the data into two chunks: training and testing set. The training set will be used to fit our model which we will be testing over the testing set.
+
+``` {r, model}
+
+train <- data[1:800,]
+test <- data[801:889,]
+
+# fit the binomial logit model
+model <- glm(Survived ~.,family=binomial(link='logit'),data=train)
+
+# obtain results of the model
+summary(model)
+
+```
+
+**Interpreting the results**
+Now we can analyze the fitting and interpret what the model is telling us.
+First of all, we can see that SibSp, Fare and Embarked are not statistically significant. As for the statistically significant variables, sex has the lowest p-value suggesting a strong association of the sex of the passenger with the probability of having survived. The negative coefficient for this predictor suggests that all other variables being equal, the male passenger is less likely to have survived. Remember that in the logit model the response variable is log odds: ln(odds) = ln(p/(1-p)) = a*x1 + b*x2 + … + z*xn. Since male is a dummy variable, being male reduces the log odds by 2.75 while a unit increase in age reduces the log odds by 0.037.
+
+Now we can run the anova() function on the model to analyze the table of deviance
+
+``` {r, anova}
+
+anova(model, test="Chisq")
+
+```
+
+The difference between the null deviance and the residual deviance shows how our model is doing against the null model (a model with only the intercept). The wider this gap, the better. Analyzing the table we can see the drop in deviance when adding each variable one at a time. Again, adding Pclass, Sex and Age significantly reduces the residual deviance. The other variables seem to improve the model less even though SibSp has a low p-value. A large p-value here indicates that the model without the variable explains more or less the same amount of variation. Ultimately what you would like to see is a significant drop in deviance and the AIC.

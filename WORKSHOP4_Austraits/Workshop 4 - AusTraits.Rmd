@@ -7,18 +7,19 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-- get Austraits data into R from Zenodo/Github
-- for my database: filter Austraits by taxon_name and export all trait observations for these species (or a subset)
+# AIMS OF WORKSHOP
+- get Austraits data into R from Zenodo and/or Github (direct R package)
+- build my database: filter Austraits by taxon_name and export all trait observations for these species (or a subset)
 - add traits from other dataset Threatened_spp_traits_OEH.xls
 - final database should contain at least 50 species with a broad range of functional traits and taxonomic families 
 
-DATABASE HEADINGS
-species
+**Database contents**
+Species
 - minimum 50 species from CPW, WSDRF, Woko NP
 - include all diagnostic species for CPW and WSDRF
-- any additional species to add re RBG Mount Annan? 
+- any additional species to add re RBG Mount Annan 
 
-traits
+Traits
 - seed mass
 - other quantitative seed traits 
 - dormancy type
@@ -27,23 +28,23 @@ traits
 - dispersal mode
 - growth form
 
-germination data/protocol info
+Germination data/protocol info
 - see links from Katherine from RBG
 - also see word doc for additional websites/places to find germ data 
-- Kew Botanic Gardens, SA Seedbank, handbook Charlotte had (by genus)
+- Kew Botanic Gardens, SA Seedbank, handbooks (by genus)
 
-seed accession data from ABG
-- availability in seedbank
+Seed accession data from ABG
+- availability of seed in vault
 - date of collection
 - location of collection (provenance - lat + long)
-- germination ?
 
-community
+Plant community
 - CPW
 - WSDRF
 - Woko NP 
 
 ```{r data}
+
 # INSTALLS
 install.packages("remotes")
 remotes::install_github("traitecoevo/austraits", build_vignettes = FALSE)
@@ -986,11 +987,13 @@ all_species_width$value <- as.numeric(all_species_width$value)
 
 ```
 
-# Extra: creating for loop functions to determine multiple means 
-## Can be used in the future if mean trait values are needed for many species
+# Extra information and tips for tackling Austraits in R
+* creating for loop functions to determine multiple means 
+* can be used in the future if mean trait values are needed for many species
 
 ``` {r for loops}
 
+# practice using for loops
 # for loop code to determine multiple means (can use for the future)
 data <- mtcars
 

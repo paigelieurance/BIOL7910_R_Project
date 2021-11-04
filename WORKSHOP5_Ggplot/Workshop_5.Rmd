@@ -1,7 +1,5 @@
 ---
 title: "Workshop 5 - Plotting and Graphing"
-author: "Paige Lieurance"
-date: "31/08/2021"
 output: pdf_document
 ---
 
@@ -49,6 +47,7 @@ __3. geom__ corresponds to the type of plot you are trying to make (histogram, b
 
 
 ```{r eval=T, echo=T, message = FALSE}
+
 # libraries
 
 library(tidyverse) #includes ggplot2
@@ -158,7 +157,7 @@ Plots can be saved as a variable using <- assign, and printed at any time by cal
 ```{r}
 iris_petal_width_to_length_plot <- ggplot(data = iris, aes(x = Petal.Width, y = Petal.Length, colour = Species)) + geom_point()
 
-iris_petal_width_to_length_plot
+iris_petal_width_to_length_plot # prints plot 
 
 ```
 
@@ -474,6 +473,7 @@ simpsons <- ggplot(iris, aes(Sepal.Length, Sepal.Width, colour = Species))+
 simpsons
 
 ```
+
 _Size_
 
 We can also change the size of the elements in a graph which in itself can present data values or bring attention to one aspect of a plot. 
@@ -606,6 +606,8 @@ END OF WORKSHOP NOTES
 
 START OF OWN NOTES
 
+# MORE PRACTICE IN GGPLOT
+
 ``` {r libraries, include=FALSE}
 library(ggpubr)
 library(dplyr)
@@ -618,9 +620,7 @@ library(DT)
 library(plotly)
 ```
 
-# BAR CHARTS
-
-## Barchart in base R
+## BAR CHARTS
 
 ```{r, eval=TRUE}
 # create data frame 
@@ -628,37 +628,24 @@ dat <- data.frame(
   time = factor(c("Lunch","Dinner"), levels=c("Lunch","Dinner")),
   total_bill = c(14.89, 17.23)
 )
-```
 
 
-```{r, echo=TRUE,fig.height=3,fig.width=3}
-par(las=1)
-barplot(dat$total_bill,ylim=c(0,20),
-        names.arg=dat$time,xlab='Time of day',
-        col="#AFC0CB",ylab='Total bill',
-        border='black')
-box()
-```
-
-## Barchart in `ggplot2`
-
-```{r, eval=FALSE,echo=TRUE,fig.height=3,fig.width=3}
 ggplot(data=dat, aes(x=time, y=total_bill, fill=time)) +
   geom_bar(colour="black", fill="#AFC0CB", 
            width=.8, stat="identity") +
   xlab("Time of day") + ylab("Total bill") +
   ylim(c(0,20))
-```
 
-```{r, echo=FALSE,fig.asp=0.6,fig.height=2}
+
 ggplot(data=dat, aes(x=time, y=total_bill, fill=time)) +
   geom_bar(colour="black", fill="#AFC0CB", 
            width=.8, stat="identity") +
   xlab("Time of day") + ylab("Total bill") +
   ylim(c(0,20))
+
 ```
 
-# ADDING ERROR BARS
+## ADDING ERROR BARS
 
 Three different types of values are commonly used for error bars, sometimes giving very different results
 
@@ -715,6 +702,118 @@ p3 <- ggplot(my_sum) +
   ylab("")
 
 grid.arrange(p1,p2,p3,nrow = 1)
+```
+
+## OTHER GRAPHS
+
+``` {r, misc}
+# 4 dashes after a comment allows you to open and close a section
+# put at the top and bottom of the code block
+
+# HISTOGRAM START ----
+# build dataset with different distributions
+data <- data.frame(
+  type = c( rep("variable 1", 1000), rep("variable 2", 1000) ),
+  value = c( rnorm(1000), rnorm(1000, mean=4) )
+)
+
+# histogram using ggplot2
+data %>%
+  ggplot( aes(x=value, fill=type)) +
+  geom_histogram( color="#e9ecef", alpha=0.6, 
+                  position = 'identity') +
+  scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  labs(fill="")
+
+# HISTOGRAM END ----
+
+# DENSITY PLOT START ----
+# load dataset from github
+data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/1_OneNum.csv", header=TRUE)
+
+# density plot in ggplot2
+data %>%
+  filter( price<300 ) %>%
+  ggplot( aes(x=price)) +
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8)
+
+# DENSITY PLOT END ----
+
+# BOXPLOT START ----
+# create data
+names <- factor(c(rep("A", 80) , rep("B", 50) , rep("C", 70)))
+value <- c( rnorm(80 , mean=10 , sd=9) , 
+            rnorm(50 , mean=2 , sd=15) , 
+            rnorm(70 , mean=30 , sd=10) )
+data <- data.frame(names,value)
+
+# boxplot using ggplot2
+data %>%
+  ggplot( aes(x=names, y=value, fill=names)) +
+  geom_boxplot() +
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  theme(
+    legend.position="none",
+    plot.title = element_text(size=11)
+  ) +
+  ggtitle("A boxplot with jitter") +
+  xlab("")
+
+# BOXPLOT END ----
+
+# VIOLIN PLOT START ----
+# create data
+data <- data.frame(
+  name=c( rep("A",500), rep("B",500), rep("B",500), rep("C",20), rep('D', 100)  ),
+  value=c( rnorm(500, 10, 5), rnorm(500, 13, 1), rnorm(500, 18, 1), rnorm(20, 25, 4), rnorm(100, 12, 1) )
+)
+sample_size <- data %>% group_by(name) %>% summarize(num=n())
+
+# violin plot in ggplot2
+data %>%
+  ggplot( aes(x=name, y=value, fill=name)) +
+  geom_violin(position="dodge", width=1.4) +
+  geom_boxplot(width=0.1, color="grey", alpha=0.2) +
+  theme(
+    legend.position="none",
+    plot.title = element_text(size=11)
+  ) +
+  ggtitle("A Violin wrapping a boxplot") +
+  xlab("") + theme(panel.background = element_blank()) # removes grey grid background
+
+# VIOLIN PLOT END ----
+
+# SCATTERPLOT WITH FITTED LINE START ----
+# create data
+x <- runif(300, min=-30, max=30) 
+y <- -1.2*x^3 + 1.1 * x^2 - x + 10 + rnorm(length(x),0,100*abs(x)) 
+
+# scatterplot in ggplot2
+data <- data.frame(
+  x = x,
+  y = y
+)
+ggplot(data, aes(x=x, y=y)) +
+  geom_point() +
+  geom_smooth(method=lm,formula=y ~ x + I(x^2) + I(x^3))
+
+# SCATTERPLOT WITH FITTED LINE END ----
+
+# CONNECTED SCATTERPLOT START ----
+# data
+data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered.csv", header=T)
+data$date <- as.Date(data$date)
+
+# connected scatterplot in ggplot2
+data %>%
+  tail(10) %>%
+  ggplot( aes(x=date, y=value)) +
+  geom_line() +
+  geom_point(shape=21, color="black", fill="#69b3a2", size=2) +
+  ggtitle("Evolution of bitcoin price")
+
+# CONNECTED SCATTERPLOT END ----
+
 ```
 
 # Visualizing BAT data
@@ -801,185 +900,197 @@ annotate_figure(occur_plot, top=text_grob("Co-occurring species abundance per tr
 
 **Figure 3.** Boxplot showing the mean (± S.E.) co-occurring species abundance of each treatment across all sites (n = 30). A two-way mixed factorial ANOVA revealed a significant interaction effect of treatment and site on co-occurring species abundance (Q$_6$ = 64.476, _p_ < 0.000).
 
-# MISC GRAPHING - Drew's script - fix with headings and markdown formatting
 
-``` {r drew}
-# 4 dashes after a comment allows you to open and close a section
-# put at the top and bottom of the code block
+# Visualising BROOMSTICK SPEED data
 
-# HISTOGRAM START ----
-# Build dataset with different distributions
-data <- data.frame(
-  type = c( rep("variable 1", 1000), rep("variable 2", 1000) ),
-  value = c( rnorm(1000), rnorm(1000, mean=4) )
-)
+``` {r, broomstick plots}
+# packages
+install.packages("gridExtra")
+install.packages("patchwork")
+install.packages("ggpubr")
+install.packages("patchwork")
+install.packages("ggthemes")
+install.packages("ggsignif")
+install.packages("pwr")
 
-# Paired histogram in base R
-pdf('paired_histogram.pdf',width=6,height=4) #making a fixed pdf of graph
+# libraries
+library(ggplot2)
+library(ggpubr)
+library(gridExtra)
+library(patchwork)
+library(ggthemes)
+library(ggsignif)
+library(pwr)
 
-hist(data$value[data$type=='variable 1'], breaks=30, xlim=c(-3,8), col=rgb(1,0,0,0.5), xlab="value", 
-     ylab="count", main="" )
+# import data 
+flying_data <- read.csv("flying_data.csv", header = TRUE)
+question_data <- read.csv("question_data.csv", header = TRUE)
+flying_data2 <- read.csv("flying_data_copy.csv", header = TRUE) # added old and young age group categories 
 
-# Second with add=TRUE to plot on top
-hist(data$value[data$type=='variable 2'], breaks=30, xlim=c(-3,8), col=rgb(0,0,1,0.5), add=TRUE)
+# FIGURES
+## create custom theme format
+theme_format <- theme(strip.background=element_rect(fill="black", size=1), strip.text=element_text(colour="white"), panel.grid.major = element_line(colour = "grey90", size = 0.5), axis.text.x=element_blank(), axis.ticks.x=element_blank())
 
-# Add legend
-legend("topright", legend=c("var 1","var 2"), 
-       col=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), 
-       pt.cex=2, pch=15,bty='n')
+## broom speeds
 
-dev.off() #turns off pdf function
+rise10_plot <- ggplot(data = flying_data, aes(broom, rise10)) + 
+  ylab("Seconds") + # adds y-axis label
+  ggtitle("Time to rise 10 meters") +
+  geom_boxplot(aes(fill = broom)) + # creates box plot coloured by broom
+  stat_boxplot(geom ='errorbar', width = 0.5, step.increase = 0.1) + # adds formatted error bars
+  theme_bw() + # removes background
+  theme_format + # applies custom theme format
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(), 
+        plot.tag = element_text(face = "bold"),
+        plot.tag.position = c(0.95, 0.8),
+        legend.position = "right") +
+        labs(tag = "A", fill = "Broom")
 
+fly50_plot <- ggplot(data = flying_data, aes(broom, fly50)) + 
+  ylab("Seconds") + 
+  ggtitle("Time to fly 50 meters") +
+  geom_boxplot(aes(fill = broom)) + 
+  stat_boxplot(geom ='errorbar', width = 0.5, step.increase = 0.1) +
+  theme_bw() + 
+  theme_format +
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        plot.tag = element_text(face = "bold"),
+        plot.tag.position = c(0.95, 0.8),
+        legend.position = "right") +
+        labs(tag = "B", fill = "Broom")
 
-# Histogram using ggplot2
-# Source: https://www.r-graph-gallery.com/histogram_several_group.html
-data %>%
-  ggplot( aes(x=value, fill=type)) +
-  geom_histogram( color="#e9ecef", alpha=0.6, 
-                  position = 'identity') +
-  scale_fill_manual(values=c("#69b3a2", "#404080")) +
-  labs(fill="")
-# HISTOGRAM END ----
+fly100_plot <- ggplot(data = flying_data, aes(broom, fly100)) + 
+  ylab("Seconds") + 
+  ggtitle("Time to fly 100 meters") +
+  geom_boxplot(aes(fill = broom)) + 
+  stat_boxplot(geom ='errorbar', width = 0.5, step.increase = 0.1) +
+  theme_bw() + 
+  theme_format +
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        plot.tag = element_text(face = "bold"),
+        plot.tag.position = c(0.95, 0.8),
+        legend.position = "right") +
+        labs(tag = "C", fill = "Broom")
 
+### individual plots
+rise10_plot
+fly50_plot
+fly100_plot
 
+### combine plots together on a single figure
+figure1 <- ggarrange(rise10_plot, 
+                     fly50_plot, 
+                     fly100_plot, 
+                     ncol = 1, 
+                     nrow = 3, 
+                     common.legend = TRUE, 
+                     legend = "right")
 
-# type colours() in console to list colour options to sub into code
+### final figure
+figure1
 
+## broom ratings
+my_comparisons <- list(c(1, 2), c(2, 3), c(1, 3))
 
+my_colours <- c("#F8766D", "#00BA38", "#619CFF")
 
-# DENSITY PLOT START ----
-# Load dataset from github
-data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/1_OneNum.csv", header=TRUE)
+q_labels <- c("1" = "Comfort",
+              "2" = "Safety",
+              "3" = "Command",
+              "4" = "Turning",
+              "5" = "Overall")
 
-# base R
-d <- density(data$price[data$price<300])
-plot(d, main="Kernel Density of Miles Per Gallon")
-polygon(d, col="red", border="blue")
+figure2 <- ggplot(question_data, aes(x = broom, y = score)) +
+  theme_format +
+  theme_bw() +
+  geom_violin(aes(fill = broom)) +
+  geom_boxplot(width = 0.05, alpha = 0.5) +
+  labs(y = "Rating (1 - 5)") +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "right") +
+  stat_compare_means(comparisons = my_comparisons, size = 4.5, label = "p.signif") +
+  coord_cartesian(ylim = c(1, 6)) + 
+  scale_y_continuous(breaks = seq(1, 5, 1)) +
+  facet_grid(~ question, labeller = labeller(question = q_labels)) +
+  labs(fill = "Broom")
 
-# ggplot2
-data %>%
-  filter( price<300 ) %>%
-  ggplot( aes(x=price)) +
-  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8)
+### final figure 
+figure2
 
-# DENSITY PLOT END ----
+text_labels <- data.frame(question =
+                            c("1","2","3","4","5"),
+                          label = c("A","B","C","D","E"))
 
+figure2 +
+  geom_text(x = 2, y = 1, aes(label = label, fontface = 2), data = text_labels, size = 5)
 
-# BOXPLOT START ----
-# Create data
-names <- factor(c(rep("A", 80) , rep("B", 50) , rep("C", 70)))
-value <- c( rnorm(80 , mean=10 , sd=9) , 
-            rnorm(50 , mean=2 , sd=15) , 
-            rnorm(70 , mean=30 , sd=10) )
-data <- data.frame(names,value)
+# FIGURE COMPARING AGES for flying data
 
-# Boxplot using base R
-# https://www.r-graph-gallery.com/96-boxplot-with-jitter.html
-boxplot(data$value ~ data$names , col=terrain.colors(4),
-        xlab='',ylab='value')
+rise10_age_plot <- ggplot(data = flying_data2, aes(age, rise10)) + 
+  ylab("Seconds") + # adds y-axis label
+  ggtitle("Time to rise 10 meters") +
+  geom_boxplot(aes(fill = age)) + # creates box plot coloured by age
+  stat_boxplot(geom ='errorbar', width = 0.5, step.increase = 0.1) + # adds formatted error bars
+  theme_bw() + # removes background
+  theme_format + # applies custom theme format
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(), 
+        plot.tag = element_text(face = "bold"),
+        plot.tag.position = c(0.95, 0.8),
+        legend.position = "right") +
+  labs(tag = "A", fill = "Age group") +
+  scale_fill_discrete(labels = c("> 27 years","< 27 years"))
 
-# Add data points
-mylevels <- levels(data$names)
-levelProportions <- summary(data$names)/nrow(data)
-for(i in 1:length(mylevels)){
-  
-  thislevel <- mylevels[i]
-  thisvalues <- data[data$names==thislevel, "value"]
-  
-  # take the x-axis indices and add a jitter, proportional to the N in each level
-  myjitter <- jitter(rep(i, length(thisvalues)), amount=levelProportions[i]/2)
-  points(myjitter, thisvalues, pch=20, col=rgb(0,0,0,.9)) 
-  
-}
-mtext(text='A boxplot with jitter',line=1) # adds title to figure
+fly50_age_plot <- ggplot(data = flying_data2, aes(age, fly50)) + 
+  ylab("Seconds") + 
+  ggtitle("Time to fly 50 meters") +
+  geom_boxplot(aes(fill = age)) + 
+  stat_boxplot(geom ='errorbar', width = 0.5, step.increase = 0.1) +
+  theme_bw() + 
+  theme_format +
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        plot.tag = element_text(face = "bold"),
+        plot.tag.position = c(0.95, 0.8),
+        legend.position = "right") +
+  labs(tag = "B", fill = "Age group") +
+  scale_fill_discrete(labels = c("> 27 years","< 27 years"))
 
-# enhanced boxplot using ggplot2
-# source: https://www.r-graph-gallery.com/89-box-and-scatter-plot-with-ggplot2.html
-data %>%
-  ggplot( aes(x=names, y=value, fill=names)) +
-  geom_boxplot() +
-  geom_jitter(color="black", size=0.4, alpha=0.9) +
-  theme(
-    legend.position="none",
-    plot.title = element_text(size=11)
-  ) +
-  ggtitle("A boxplot with jitter") +
-  xlab("")
-# BOXPLOT END ----
+fly100_age_plot <- ggplot(data = flying_data2, aes(age, fly100)) + 
+  ylab("Seconds") + 
+  ggtitle("Time to fly 100 meters") +
+  geom_boxplot(aes(fill = age)) + 
+  stat_boxplot(geom ='errorbar', width = 0.5, step.increase = 0.1) +
+  theme_bw() + 
+  theme_format +
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        plot.tag = element_text(face = "bold"),
+        plot.tag.position = c(0.95, 0.8),
+        legend.position = "right") +
+  labs(tag = "C", fill = "Age group") +
+  scale_fill_discrete(labels = c("> 27 years","< 27 years"))
 
+### individual plots
+rise10_age_plot
+fly50_age_plot
+fly100_age_plot
 
-# VIOLIN PLOT START ----
-# Create data
-data <- data.frame(
-  name=c( rep("A",500), rep("B",500), rep("B",500), rep("C",20), rep('D', 100)  ),
-  value=c( rnorm(500, 10, 5), rnorm(500, 13, 1), rnorm(500, 18, 1), rnorm(20, 25, 4), rnorm(100, 12, 1) )
-)
-sample_size <- data %>% group_by(name) %>% summarize(num=n())
+### combine plots together on a single figure
+figure3 <- ggarrange(rise10_age_plot, 
+                     fly50_age_plot, 
+                     fly100_age_plot, 
+                     ncol = 1, 
+                     nrow = 3, 
+                     common.legend = TRUE, 
+                     legend = "right")
 
-# Violin plot in base R
-vioplot(value~name,data,xlab='',las=1)
-mtext(text='A Violin wrapping a boxplot',line=1)
-
-# Violin plot in ggplot2
-# source: https://www.data-to-viz.com/graph/violin.html
-data %>%
-  ggplot( aes(x=name, y=value, fill=name)) +
-  geom_violin(position="dodge", width=1.4) +
-  geom_boxplot(width=0.1, color="grey", alpha=0.2) +
-  theme(
-    legend.position="none",
-    plot.title = element_text(size=11)
-  ) +
-  ggtitle("A Violin wrapping a boxplot") +
-  xlab("") + theme(panel.background = element_blank()) # removes grey grid background
-# VIOLIN PLOT END ----
-
-
-# SCATTERPLOT WITH FITTED LINE START ----
-# Create data
-x <- runif(300, min=-30, max=30) 
-y <- -1.2*x^3 + 1.1 * x^2 - x + 10 + rnorm(length(x),0,100*abs(x)) 
-
-# base r
-# source: https://www.r-graph-gallery.com/45-confidence-interval-around-polynomial-curve-fitting.html
-plot(x,y,col=rgb(0.4,0.4,0.8,0.6), pch=16 , cex=1.3 , xlab="" , ylab="") 
-model <- lm(y ~ x + I(x^2) + I(x^3))
-myPredict <- predict(model, interval="prediction" )
-ix <- sort(x,index.return=T)$ix
-lines(x[ix], myPredict[ix , 1], col=2, lwd=2 )
-polygon(c(rev(x[ix]), x[ix]), c(rev(myPredict[ ix,3]), myPredict[ ix,2]), col = rgb(0.7,0.7,0.7,0.4) , border = NA)
-
-# ggplot2
-# source: https://www.r-graph-gallery.com/50-51-52-scatter-plot-with-ggplot2.html
-data <- data.frame(
-  x = x,
-  y = y
-)
-ggplot(data, aes(x=x, y=y)) +
-  geom_point() +
-  geom_smooth(method=lm,formula=y ~ x + I(x^2) + I(x^3))
-# SCATTERPLOT WITH FITTED LINE END ----
-
-
-# CONNECTED SCATTERPLOT START ----
-# data
-data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered.csv", header=T)
-data$date <- as.Date(data$date)
-
-# base R
-plot(value~date,tail(data,n=10),type='l',las=3)
-points(value~date,tail(data,n=10),pch=16)
-
-# ggplot2
-# source: https://www.r-graph-gallery.com/connected_scatterplot_ggplot2.html
-data %>%
-  tail(10) %>%
-  ggplot( aes(x=date, y=value)) +
-  geom_line() +
-  geom_point(shape=21, color="black", fill="#69b3a2", size=2) +
-  ggtitle("Evolution of bitcoin price")
-# CONNECTED SCATTERPLOT END ----
+### final figure
+figure3
 
 ```
-
-

@@ -1,6 +1,5 @@
 ---
 title: "Workshop 2 - ANOVA"
-author: "Paige Lieurance"
 output: pdf_document
 ---
 
@@ -39,7 +38,7 @@ qf(0.95,1,4) #critical F value
 pf(6,1,4,lower.tail=FALSE) #p value
 
 # constructing data with NO DIFFERENCE
-
+## run to see the ANOVA output and compare to the above dataset
 no.diff.data <- data.frame(group=c(rep('diet_a',8),
                                    rep('diet_b',8),
                                    rep('diet_c',8)),
@@ -48,18 +47,69 @@ no.diff.data <- data.frame(group=c(rep('diet_a',8),
                                     rnorm(n=8,mean=100,sd=20)))
 
 
-# calculate means and variances
+# calculate group means and variances
 group.means <- tapply(no.diff.data$growth,no.diff.data$group,mean)
 group.vars  <- tapply(no.diff.data$growth,no.diff.data$group,var)
 
+# fitting model to dataset
+no.diff.model <- lm(growth~group,data=no.diff.data)
+
+# partitions variance, runs ANOVA 
+anova(no.diff.model)
 
 ```
 # ONE WAY ANOVA
 
-**The effect of salinity on snow pea growth**
+## The effect of salinity on snow pea growth
 
+``` {r, snow peas}
 
+# packages and libraries
+install.packages('RCurl')
+install.packages('car') # for Levene's test 
+library(RCurl)
+library(readr)
+library(car)
 
+# imports growth data and defines factor and levels
+# can do manually by clicking on dataset -> import dataset -> define column types, factor variables and levels
+# code will appear in console -> copy and paste into script
+growth_data <- read_csv("growth_data.csv", 
++     col_types = cols(plant = col_character(), 
++         salinity = col_factor(levels = c("control", 
++             "1:20", "1:10", "1:5")), `height (mm)` = col_number()))
+
+View(growth_data)
+summary(growth_data)
+
+# yield summary statistics of plant heights
+growth_data_means <- tapply(growth_data$`height (mm)`,growth_data$salinity,mean)
+
+growth_data_n <- tapply(growth_data$`height (mm)`,growth_data$salinity,length)
+
+growth_data_var <- tapply(growth_data$`height (mm)`,growth_data$salinity,var)
+
+growth_data_sd <- tapply(growth_data$`height (mm)`,growth_data$salinity,sd)
+
+growth_data_se <- tapply(growth_data$`height (mm)`,growth_data$salinity,sd)/sqrt(growth_data_n) 
+
+# check assumptions
+# visual diagnostic plots
+growth_model <- aov(`height (mm)`~salinity,growth_data)
+plot(growth_model)
+
+# check for homogeneity of variances
+leveneTest(`height (mm)`~salinity,data=growth_data) # p > 0.05 = homogeneous
+
+# check for normality of residuals
+shapiro.test(growth_data$`height (mm)`) # p > 0.05 = normal
+
+# run ANOVA and post-hoc test
+anova(growth_model)
+summary(growth_model)
+TukeyHSD(growth_model)
+
+```
 
 # POWER FOR ANOVA
 
@@ -76,7 +126,7 @@ power.anova.test(groups=4,n=NULL,between.var=var(c(4,5,6,7)),within.var=5,sig.le
 
 # TWO WAY FACTORIAL ANOVA
 
-**Oysters** 
+## Oysters
 
 ``` {r, oysters}
 
@@ -121,12 +171,9 @@ plot(oyster.model)
 bartlett.test(nlive~interaction,oysters)
 
 # performs Levene's test for variance homogeneity assumption
-
-# install.packages('car') #uncomment if car needs to be installed
-library(car)
 leveneTest(nlive ~ interaction,oysters)
 
-#analyse data
+# analyse data
 anova(oyster.model) # perform ANOVA on model
 
 # perform post hoc test on model if effects are significant
@@ -134,21 +181,21 @@ TukeyHSD(oyster.model)
 
 ```
 
-**The direct and indirect effects of Myrtle rust in Australian rainforests**
+## The direct and indirect effects of Myrtle rust in Australian rainforests
 
 ```{r, myrtle rust}
 
-# libraries ----
+# packages and libraries 
+install.packages('GFD') # needed for co-occurring species abundance
+install.packages("Superpower")
+library(GFD)
+library(Superpower)
 
-library(readr) # to read csv file
-library(car) # for Levene's test
-
-# data logistics ----
-## data import
+# data import
 MyrtleData <- read.csv("myrtle_data.csv", header = TRUE)
 View(MyrtleData)
 
-## rename columns for easier use
+# rename columns for easier use
 names(MyrtleData) # get column names - check for readability 
 new_names <- c("site", "plot", "treatment", "canopy", "seedling", "occur") # create a container "c()" with the new names
 names(MyrtleData) <- new_names # apply the new names to the 'names' of the dataset
@@ -171,4 +218,194 @@ occur_treatment_means <- tapply(MyrtleData$occur,MyrtleData$treatment,mean)
 occur_treatment_se <- tapply(MyrtleData$occur,MyrtleData$treatment,sd)/sqrt(30)
 occur_site_means <- tapply(MyrtleData$occur,MyrtleData$site,mean)
 occur_site_se <- tapply(MyrtleData$occur,MyrtleData$site,sd)/sqrt(30)
+
+# CANOPY COVER across all sites
+## assumptions
+canopy_model <- aov(canopy~treatment*site, MyrtleData) # fit model with main effects and interaction effect
+plot(canopy_model) # check assumptions graphically
+
+## homogeneity of variances
+leveneTest(canopy_model) # perform levene's test for homogeneous variances
+
+## normality of residuals
+canopy_resid <- residuals(canopy_model) # pulls the residuals
+hist(canopy_resid) # plots residuals on a histogram
+shapiro.test(canopy_resid) # perform shapiro's test for normal residuals
+
+## run analysis 
+summary(canopy_model) # performs ANOVA on model
+TukeyHSD(canopy_model) # ignore interaction and just look at main effects
+
+# CO-OCCURRING SPECIES ABUNDANCE across all sites
+occur_model <- GFD(occur~treatment*site, MyrtleData)
+summary(occur_model)
+
+# POWER ANALYSES
+## canopy cover
+canopy_design <- ANOVA_design(design = "4w*3b", n = 10, mu = c(90.368,90.268,
+                              91.093,90.298,90.400,91.012,92.255,91.248,92.694,
+                              92.135,91.004,92.145), sd = 1.012, r = 0)
+
+power_canopy <- ANOVA_power(canopy_design, nsims = 1000)
+
+## co-occurring species abundance
+occur_design <- ANOVA_design(design = "4w*3b", n = 10, mu = c(24.52,20.425,
+                              42.625,8.070,20.125,37.620,38.3,7.74,93.895,
+                              45.655,33.73,40.96), sd = 22.571, r = 0)
+
+power_occur <- ANOVA_power(occur_design, nsims = 1000)
 ```
+
+## Harry Potter broomstick speeds
+
+``` {r, broomstick}
+
+# import data 
+flying_data <- read.csv("flying_data.csv", header = TRUE)
+question_data <- read.csv("question_data.csv", header = TRUE)
+flying_data2 <- read.csv("flying_data_copy.csv", header = TRUE) # added old and young age group categories 
+
+# summaries
+summary(flying_data)
+summary(question_data)
+summary(flying_data2)
+
+# data wrangle FLYING DATA
+flying_data$broom <- as.factor(flying_data$broom)
+flying_data$individual <- as.factor(flying_data$individual)
+flying_data$age <- as.factor(flying_data$age)
+
+flying_data2$broom <- as.factor(flying_data2$broom)
+flying_data2$individual <- as.factor(flying_data2$individual)
+flying_data2$age <- as.factor(flying_data2$age)
+
+# data wrangle QUESTION DATA
+question_data$broom <- as.factor(question_data$broom)
+question_data$individual <- as.factor(question_data$individual)
+question_data$age <- as.numeric(question_data$age)
+question_data$question <- as.factor(question_data$question)
+question_data$score <- as.numeric(question_data$score)
+
+# sort QUESTION DATA by questions
+q1_data <- question_data[question_data$question == 1, ]
+q2_data <- question_data[question_data$question == 2, ]
+q3_data <- question_data[question_data$question == 3, ]
+q4_data <- question_data[question_data$question == 4, ]
+q5_data <- question_data[question_data$question == 5, ]
+
+
+# FACTORIAL ANOVAS FOR FLYING DATA2
+
+## time taken to rise 10m
+rise10_model <- aov(rise10 ~ broom * age, data = flying_data2) # partitions variance
+anova(rise10_model) # performs ANOVA
+summary(rise10_model) # summary of ANOVA (look at interaction first)
+TukeyHSD(rise10_model) # post-hoc comparisons of all levels 
+
+## time taken to fly 50m
+fly50_model <- aov(fly50 ~ broom * age, data = flying_data2)
+anova(fly50_model)
+summary(fly50_model)
+TukeyHSD(fly50_model)
+
+## time taken to fly 100m
+fly100_model <- aov(fly100 ~ broom * age, data = flying_data2)
+anova(fly100_model)
+summary(fly100_model)
+TukeyHSD(fly100_model)
+
+# SUMMARY STATS FOR FLYING DATA2
+## using tapply in baser 
+
+rise10_broom_means <- tapply(flying_data2$rise10,flying_data2$broom,mean)
+rise10_broom_sd <- tapply(flying_data2$rise10,flying_data2$broom,sd)
+rise10_broom_se <- rise10_broom_sd/sqrt(36)
+
+rise10_age_means <- tapply(flying_data2$rise10,flying_data2$age,mean)
+rise10_age_sd <- tapply(flying_data2$rise10,flying_data2$age,sd)
+rise10_age_se <- rise10_age_sd/sqrt(36)
+
+fly50_broom_means <- tapply(flying_data2$fly50,flying_data2$broom,mean)
+fly50_broom_sd <- tapply(flying_data2$fly50,flying_data2$broom,sd)
+fly50_broom_se <- fly50_broom_sd/sqrt(36)
+
+fly50_age_means <- tapply(flying_data2$fly50,flying_data2$age,mean)
+fly50_age_sd <- tapply(flying_data2$fly50,flying_data2$age,sd)
+fly50_age_se <- fly50_age_sd/sqrt(36)
+
+fly100_broom_means <- tapply(flying_data2$fly100,flying_data2$broom,mean)
+fly100_broom_sd <- tapply(flying_data2$fly100,flying_data2$broom,sd)
+fly100_broom_se <- fly100_broom_sd/sqrt(36)
+
+fly100_age_means <- tapply(flying_data2$fly100,flying_data2$age,mean)
+fly100_age_sd <- tapply(flying_data2$fly100,flying_data2$age,sd)
+fly100_age_se <- fly100_age_sd/sqrt(36)
+
+# SUMMARY STATS FOR QUESTION DATA
+## calculates means and SE for each broomstick
+### practice using piping in tidyverse 
+
+seq1 <- q1_data %>%
+  group_by(broom) %>%
+  summarise(n = n(),
+            mean = mean(score),
+            sd = sd(score)) %>%
+  mutate(se = sd/sqrt(n))
+
+seq2 <- q2_data %>%
+  group_by(broom) %>%
+  summarise(n = n(),
+            mean = mean(score),
+            sd = sd(score)) %>%
+  mutate(se = sd/sqrt(n))
+
+seq3 <- q3_data %>%
+  group_by(broom) %>%
+  summarise(n = n(),
+            mean = mean(score),
+            sd=sd(score)) %>%
+  mutate(se = sd/sqrt(n))
+
+seq4 <- q4_data %>%
+  group_by(broom) %>%
+  summarise(n = n(),
+            mean = mean(score),
+            sd = sd(score)) %>%
+  mutate(se = sd/sqrt(n))
+
+seq5 <- q5_data %>%
+  group_by(broom) %>%
+  summarise(n = n(),
+            mean = mean(score),
+            sd = sd(score)) %>%
+  mutate(se = sd/sqrt(n))
+
+
+# WILCOX TESTS FOR QUESTION DATA  
+## Q1 comfort
+wilcox.test(q1_data$score[q1_data$broom == "Nimbus 2000"], q1_data$score[q1_data$broom == "Nimbus 2001"])
+wilcox.test(q1_data$score[q1_data$broom == "Nimbus 2000"], q1_data$score[q1_data$broom == "Cleansweep 11"])
+wilcox.test(q1_data$score[q1_data$broom == "Nimbus 2001"], q1_data$score[q1_data$broom == "Cleansweep 11"])
+
+## Q2 safety
+wilcox.test(q2_data$score[q2_data$broom == "Nimbus 2000"], q2_data$score[q2_data$broom == "Nimbus 2001"])
+wilcox.test(q2_data$score[q2_data$broom == "Nimbus 2000"], q2_data$score[q2_data$broom == "Cleansweep 11"])
+wilcox.test(q2_data$score[q2_data$broom == "Nimbus 2001"], q2_data$score[q2_data$broom == "Cleansweep 11"])
+
+## Q3 command
+wilcox.test(q3_data$score[q3_data$broom == "Nimbus 2000"], q3_data$score[q3_data$broom == "Nimbus 2001"])
+wilcox.test(q3_data$score[q3_data$broom == "Nimbus 2000"], q3_data$score[q3_data$broom == "Cleansweep 11"])
+wilcox.test(q3_data$score[q3_data$broom == "Nimbus 2001"], q3_data$score[q3_data$broom == "Cleansweep 11"])
+
+## Q4 turning
+wilcox.test(q4_data$score[q4_data$broom == "Nimbus 2000"], q4_data$score[q4_data$broom == "Nimbus 2001"])
+wilcox.test(q4_data$score[q4_data$broom == "Nimbus 2000"], q4_data$score[q4_data$broom == "Cleansweep 11"])
+wilcox.test(q4_data$score[q4_data$broom == "Nimbus 2001"], q4_data$score[q4_data$broom == "Cleansweep 11"])
+
+## Q5 overall
+wilcox.test(q5_data$score[q5_data$broom == "Nimbus 2000"], q5_data$score[q5_data$broom == "Nimbus 2001"])
+wilcox.test(q5_data$score[q5_data$broom == "Nimbus 2000"], q5_data$score[q5_data$broom == "Cleansweep 11"])
+wilcox.test(q5_data$score[q5_data$broom == "Nimbus 2001"], q5_data$score[q5_data$broom == "Cleansweep 11"])
+
+```
+
